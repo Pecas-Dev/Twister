@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twister Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .player-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-add {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-add:active {
+            transform: translateY(0);
+        }
+
+        .players-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .player-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .btn-remove {
+            background: #f44336;
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        .btn-remove:hover {
+            background: #da190b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-start:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .color-dots {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .color-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .dot-red { background: #e74c3c; }
+        .dot-blue { background: #3498db; }
+        .dot-yellow { background: #f1c40f; }
+        .dot-green { background: #2ecc71; }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .player-input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Twister</h1>
+            <p>Get ready to twist and turn!</p>
+            <div class="color-dots">
+                <div class="color-dot dot-red"></div>
+                <div class="color-dot dot-blue"></div>
+                <div class="color-dot dot-yellow"></div>
+                <div class="color-dot dot-green"></div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2 class="section-title">Add Players</h2>
+                <div class="player-input-group">
+                    <input type="text" id="playerNameInput" placeholder="Enter player name..." maxlength="20">
+                    <button class="btn btn-add" onclick="addPlayer()">Add</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Players (<span id="playerCount">0</span>)</h2>
+                <div id="playersList" class="players-list">
+                    <div class="empty-state">No players yet. Add some players to start!</div>
+                </div>
+            </div>
+
+            <button class="btn btn-start" id="startBtn" onclick="startGame()" disabled>
+                Start Game
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let players = [];
+
+        // Load players from localStorage on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedPlayers = localStorage.getItem('twisterPlayers');
+            if (savedPlayers) {
+                players = JSON.parse(savedPlayers);
+                updatePlayersList();
+            }
+        });
+
+        // Allow Enter key to add player
+        document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addPlayer();
+            }
+        });
+
+        function addPlayer() {
+            const input = document.getElementById('playerNameInput');
+            const name = input.value.trim();
+
+            if (name === '') {
+                alert('Please enter a player name!');
+                return;
+            }
+
+            if (players.includes(name)) {
+                alert('This player is already in the game!');
+                return;
+            }
+
+            players.push(name);
+            input.value = '';
+            input.focus();
+            
+            updatePlayersList();
+            savePlayers();
+        }
+
+        function removePlayer(index) {
+            players.splice(index, 1);
+            updatePlayersList();
+            savePlayers();
+        }
+
+        function updatePlayersList() {
+            const playersList = document.getElementById('playersList');
+            const playerCount = document.getElementById('playerCount');
+            const startBtn = document.getElementById('startBtn');
+
+            playerCount.textContent = players.length;
+
+            if (players.length === 0) {
+                playersList.innerHTML = '<div class="empty-state">No players yet. Add some players to start!</div>';
+                startBtn.disabled = true;
+            } else {
+                playersList.innerHTML = players.map((player, index) => `
+                    <div class="player-item">
+                        <span class="player-name">${player}</span>
+                        <button class="btn btn-remove" onclick="removePlayer(${index})">Remove</button>
+                    </div>
+                `).join('');
+                startBtn.disabled = players.length < 2;
+            }
+        }
+
+        function savePlayers() {
+            localStorage.setItem('twisterPlayers', JSON.stringify(players));
+        }
+
+        function startGame() {
+            if (players.length < 2) {
+                alert('You need at least 2 players to start!');
+                return;
+            }
+            // This will be implemented in Step 2
+            alert('Game starting soon! (Step 2 coming up 🎮)');
+        }
+    </script>
+</body>
+</html>
