@@ -1,5 +1,5 @@
 # Spotify Configuration (contains API credentials)
-config.template.js
+# config.js
 
 # System files
 .DS_Store
