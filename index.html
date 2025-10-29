@@ -81,6 +81,19 @@
                 <div class="countdown-timer" id="countdownTimer">10</div>
             </div>
 
+            <!-- Mini Music Player (now inside the phone UI) -->
+            <div id="miniMusicPlayer" class="mini-music-player" style="display: none;">
+                <div class="mini-player-info">
+                    <div class="now-playing-track" id="miniTrackName">No music playing</div>
+                    <div class="now-playing-artist" id="miniArtistName">Connect Spotify in settings</div>
+                </div>
+                <div class="mini-player-controls">
+                    <button class="mini-player-btn" id="miniPlayBtn" onclick="playSpotify()" style="display: none;">▶️</button>
+                    <button class="mini-player-btn" id="miniPauseBtn" onclick="pauseSpotify()" style="display: none;">⏸️</button>
+                    <button class="mini-player-btn" id="miniSkipBtn" onclick="skipSpotify()" style="display: none;">⏭️</button>
+                </div>
+            </div>
+
             <div class="game-controls">
                 <button class="btn btn-spin" onclick="nextPlayerManual()">
                     Next Player
@@ -148,6 +161,16 @@
                     <p style="font-size: 0.85em; color: #8e8e93; margin-top: 12px; padding: 0 4px; line-height: 1.4;">
                         Challenges appear randomly during gameplay. Frequency affects how often they might appear, but there's always an element of surprise!
                     </p>
+                    <!-- Challenges Dropdown List -->
+                    <div class="challenge-dropdown">
+                    <button class="challenge-dropdown-toggle" onclick="toggleChallengeList()">
+                        <span>Manage Challenge Pool</span>
+                        <span class="dropdown-arrow">▶</span>
+                    </button>
+                    <div id="challengeListDropdown" style="display: none;">
+                        <div id="challengeListContainer" class="challenge-list-container"></div>
+                    </div>
+                    </div>
                 </div>
             </div>
 
@@ -241,19 +264,6 @@
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Mini Music Player (shown during game) -->
-    <div id="miniMusicPlayer" class="mini-music-player">
-        <div class="mini-player-info">
-            <div class="now-playing-track" id="miniTrackName">No music playing</div>
-            <div class="now-playing-artist" id="miniArtistName">Connect Spotify in settings</div>
-        </div>
-        <div class="mini-player-controls">
-            <button class="mini-player-btn" id="miniPlayBtn" onclick="playSpotify()" style="display: none;">▶️</button>
-            <button class="mini-player-btn" id="miniPauseBtn" onclick="pauseSpotify()" style="display: none;">⏸️</button>
-            <button class="mini-player-btn" onclick="skipSpotify()" style="display: none;" id="miniSkipBtn">⏭️</button>
         </div>
     </div>
 
