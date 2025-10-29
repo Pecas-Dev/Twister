@@ -40,6 +40,47 @@ const SPOTIFY_CONFIG = {
     ]
 };
 
+const SPOTIFY_TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
+const TOKEN_EXPIRY_BUFFER_MS = 60 * 1000; // Refresh one minute before expiry
+
+function base64UrlEncode(buffer) {
+    let bytes = buffer;
+
+    if (buffer instanceof ArrayBuffer) {
+        bytes = new Uint8Array(buffer);
+    }
+
+    let binary = '';
+    const len = bytes.length;
+
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+
+    return btoa(binary)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+function generateCodeVerifier() {
+    const randomBytes = new Uint8Array(96);
+    crypto.getRandomValues(randomBytes);
+    return base64UrlEncode(randomBytes);
+}
+
+function generateStateParameter() {
+    const randomBytes = new Uint8Array(32);
+    crypto.getRandomValues(randomBytes);
+    return base64UrlEncode(randomBytes);
+}
+
+async function generateCodeChallenge(codeVerifier) {
+    const data = new TextEncoder().encode(codeVerifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return base64UrlEncode(digest);
+}
+
 // Spotify State
 let spotifyAccessToken = null;
 let spotifyPlayer = null;
@@ -104,55 +145,198 @@ function connectSpotify() {
 }
 
 function disconnectSpotify() {
-    if (spotifyPlayer) {
-        spotifyPlayer.disconnect();
-    }
-    spotifyAccessToken = null;
-    spotifyPlayer = null;
-    spotifyDeviceId = null;
-    isSpotifyReady = false;
     currentPlaylist = null;
-    localStorage.removeItem('spotifyAccessToken');
-    localStorage.removeItem('spotifyTokenExpiry');
+    clearSpotifySession();
+    localStorage.removeItem('spotifyCodeVerifier');
+    localStorage.removeItem('spotifyAuthState');
     localStorage.removeItem('currentPlaylist');
     updateSpotifyUI();
 }
 
 // Check for token in URL
-function checkSpotifyCallback() {
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const token = params.get('access_token');
-    const expiresIn = params.get('expires_in');
+async function checkSpotifyCallback() {
+    const url = new URL(window.location.href);
+    const queryParams = url.searchParams;
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const authError = queryParams.get('error') || hashParams.get('error');
 
-    if (token) {
-        spotifyAccessToken = token;
-        const expiryTime = Date.now() + (expiresIn * 1000);
-        localStorage.setItem('spotifyAccessToken', token);
-        localStorage.setItem('spotifyTokenExpiry', expiryTime.toString());
-        
-        // Clean URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Load SDK
-        loadSpotifySDK();
-    } else {
-        // Check stored token
-        const storedToken = localStorage.getItem('spotifyAccessToken');
-        const expiryTime = localStorage.getItem('spotifyTokenExpiry');
-        
-        if (storedToken && expiryTime && Date.now() < parseInt(expiryTime)) {
-            spotifyAccessToken = storedToken;
-            loadSpotifySDK();
+    if (authError) {
+        console.error('Spotify authorization error:', authError);
+        alert('Spotify authorization was cancelled or failed. Please try again.');
+        clearSpotifySession();
+    }
+
+    let handledAuthFlow = false;
+
+    if (queryParams.has('code')) {
+        const authState = queryParams.get('state');
+        const storedState = localStorage.getItem('spotifyAuthState');
+
+        if (storedState && authState && storedState !== authState) {
+            console.error('Spotify authorization state mismatch.');
+            alert('Spotify authorization failed due to a state mismatch. Please try again.');
+            clearSpotifySession();
+        } else {
+            try {
+                await exchangeSpotifyCodeForToken(queryParams.get('code'));
+                handledAuthFlow = true;
+            } catch (error) {
+                console.error('Error completing Spotify authorization:', error);
+                alert('Unable to complete Spotify authorization. Please try again.');
+                clearSpotifySession();
+            }
         }
     }
-    
+
+    localStorage.removeItem('spotifyCodeVerifier');
+    localStorage.removeItem('spotifyAuthState');
+
+    if (url.search || authError) {
+        const cleanHash = hashParams;
+        if (cleanHash.has('error')) {
+            cleanHash.delete('error');
+        }
+
+        const cleanUrl = `${window.location.origin}${window.location.pathname}${cleanHash.toString() ? `#${cleanHash.toString()}` : ''}`;
+        window.history.replaceState({}, document.title, cleanUrl);
+    }
+
+    if (!handledAuthFlow) {
+        await restoreStoredSpotifySession();
+    }
+
     // Load saved playlist
     const savedPlaylist = localStorage.getItem('currentPlaylist');
     if (savedPlaylist) {
         currentPlaylist = JSON.parse(savedPlaylist);
-        updateSpotifyUI();
     }
+
+    updateSpotifyUI();
+}
+
+async function exchangeSpotifyCodeForToken(code) {
+    const codeVerifier = localStorage.getItem('spotifyCodeVerifier');
+
+    if (!codeVerifier) {
+        throw new Error('Missing PKCE code verifier.');
+    }
+
+    const body = new URLSearchParams({
+        client_id: SPOTIFY_CONFIG.clientId,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: SPOTIFY_CONFIG.redirectUri,
+        code_verifier: codeVerifier
+    });
+
+    const response = await fetch(SPOTIFY_TOKEN_ENDPOINT, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error_description || data.error || 'Spotify token exchange failed.');
+    }
+
+    applySpotifyTokenResponse(data);
+}
+
+async function restoreStoredSpotifySession() {
+    const storedToken = localStorage.getItem('spotifyAccessToken');
+    const expiry = parseInt(localStorage.getItem('spotifyTokenExpiry'), 10);
+
+    if (!storedToken || !expiry) {
+        return false;
+    }
+
+    if (Date.now() < (expiry - TOKEN_EXPIRY_BUFFER_MS)) {
+        spotifyAccessToken = storedToken;
+        loadSpotifySDK();
+        updateSpotifyUI();
+        return true;
+    }
+
+    const refreshToken = localStorage.getItem('spotifyRefreshToken');
+
+    if (!refreshToken) {
+        clearSpotifySession();
+        return false;
+    }
+
+    try {
+        await refreshSpotifyToken(refreshToken);
+        return true;
+    } catch (error) {
+        console.error('Error refreshing Spotify token:', error);
+        clearSpotifySession();
+        return false;
+    }
+}
+
+async function refreshSpotifyToken(refreshToken) {
+    const body = new URLSearchParams({
+        client_id: SPOTIFY_CONFIG.clientId,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken
+    });
+
+    const response = await fetch(SPOTIFY_TOKEN_ENDPOINT, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error_description || data.error || 'Spotify token refresh failed.');
+    }
+
+    applySpotifyTokenResponse(data);
+}
+
+function applySpotifyTokenResponse(tokenResponse) {
+    const { access_token: accessToken, expires_in: expiresIn, refresh_token: refreshToken } = tokenResponse;
+
+    if (!accessToken) {
+        throw new Error('Spotify token response did not include an access token.');
+    }
+
+    const expiryTime = Date.now() + ((typeof expiresIn === 'number' ? expiresIn : parseInt(expiresIn, 10) || 3600) * 1000);
+
+    spotifyAccessToken = accessToken;
+    localStorage.setItem('spotifyAccessToken', accessToken);
+    localStorage.setItem('spotifyTokenExpiry', expiryTime.toString());
+
+    if (refreshToken) {
+        localStorage.setItem('spotifyRefreshToken', refreshToken);
+    }
+
+    loadSpotifySDK();
+    updateSpotifyUI();
+}
+
+function clearSpotifySession() {
+    if (spotifyPlayer) {
+        spotifyPlayer.disconnect();
+    }
+
+    spotifyAccessToken = null;
+    spotifyPlayer = null;
+    spotifyDeviceId = null;
+    isSpotifyReady = false;
+    isPlaying = false;
+
+    localStorage.removeItem('spotifyAccessToken');
+    localStorage.removeItem('spotifyTokenExpiry');
+    localStorage.removeItem('spotifyRefreshToken');
 }
 
 function loadSpotifySDK() {
@@ -346,6 +530,8 @@ function updatePlayPauseButtons() {
 // Initialize
 if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', () => {
-        checkSpotifyCallback();
+        checkSpotifyCallback().catch(error => {
+            console.error('Error initializing Spotify session:', error);
+        });
     });
 }
