@@ -17,6 +17,8 @@ let voiceEnabled = true;
 let voiceRate = 1.0; // 0.5 to 2.0
 let voiceVolume = 1.0; // 0 to 1
 let voicePitch = 1.0; // 0 to 2
+let selectedVoice = null;
+let availableVoices = [];
 
 // Game Constants
 const COLORS = ['red', 'blue', 'yellow', 'green'];
@@ -48,6 +50,8 @@ const CHALLENGE_PROBABILITIES = {
 
 // Challenge sound
 const challengeSound = new Audio('sfx/OIIA.mp3');
+challengeSound.preload = 'auto';
+challengeSound.load(); // Preload the audio
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
@@ -81,7 +85,92 @@ function checkSpeechSupport() {
             voiceToggle.disabled = true;
             voiceToggle.checked = false;
         }
+    } else {
+        loadVoices();
     }
+}
+
+// Load and select best voice
+function loadVoices() {
+    // Voices may load asynchronously
+    const setVoices = () => {
+        availableVoices = window.speechSynthesis.getVoices();
+
+        if (availableVoices.length > 0) {
+            selectBestVoice();
+        }
+    };
+
+    // Initial load
+    setVoices();
+
+    // Listen for voice list changes (some browsers load async)
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = setVoices;
+    }
+}
+
+// Select the best quality English voice
+function selectBestVoice() {
+    // Filter for English voices
+    const englishVoices = availableVoices.filter(voice =>
+        voice.lang.startsWith('en')
+    );
+
+    if (englishVoices.length === 0) {
+        console.warn('No English voices available');
+        return;
+    }
+
+    // Priority order for voice selection:
+    // 1. Google voices (usually high quality)
+    // 2. Premium/enhanced voices (containing words like 'premium', 'enhanced', 'quality')
+    // 3. Female voices (often clearer)
+    // 4. US English voices
+    // 5. Any English voice
+
+    let bestVoice = null;
+
+    // Try to find Google voices first
+    bestVoice = englishVoices.find(voice =>
+        voice.name.includes('Google') && voice.lang === 'en-US'
+    );
+
+    // Try any Google English voice
+    if (!bestVoice) {
+        bestVoice = englishVoices.find(voice => voice.name.includes('Google'));
+    }
+
+    // Try premium/enhanced voices
+    if (!bestVoice) {
+        bestVoice = englishVoices.find(voice =>
+            voice.name.toLowerCase().includes('premium') ||
+            voice.name.toLowerCase().includes('enhanced') ||
+            voice.name.toLowerCase().includes('natural')
+        );
+    }
+
+    // Try US English female voices (often clearer)
+    if (!bestVoice) {
+        bestVoice = englishVoices.find(voice =>
+            voice.lang === 'en-US' &&
+            (voice.name.includes('female') || voice.name.includes('Female') ||
+             voice.name.includes('Samantha') || voice.name.includes('Victoria'))
+        );
+    }
+
+    // Try any US English voice
+    if (!bestVoice) {
+        bestVoice = englishVoices.find(voice => voice.lang === 'en-US');
+    }
+
+    // Fallback to first English voice
+    if (!bestVoice) {
+        bestVoice = englishVoices[0];
+    }
+
+    selectedVoice = bestVoice;
+    console.log('Selected voice:', bestVoice.name, bestVoice.lang);
 }
 
 // Player Management
@@ -368,7 +457,34 @@ function speak(text, isTest = false) {
     utterance.rate = voiceRate;
     utterance.volume = voiceVolume;
     utterance.pitch = voicePitch;
-    
+
+    // Use selected voice if available
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+    }
+
+    // iOS WORKAROUND: Pause Spotify during speech on mobile devices
+    // iOS routes speech synthesis through phone earpiece, so we pause music to avoid conflicts
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    let wasMusicPlaying = false;
+
+    if (isIOS && typeof pauseSpotify === 'function' && typeof isPlaying !== 'undefined') {
+        wasMusicPlaying = isPlaying;
+        if (wasMusicPlaying) {
+            pauseSpotify();
+        }
+    }
+
+    // Resume music after speech ends
+    utterance.onend = () => {
+        if (isIOS && wasMusicPlaying && typeof playSpotify === 'function') {
+            // Small delay before resuming music
+            setTimeout(() => {
+                playSpotify();
+            }, 300);
+        }
+    };
+
     window.speechSynthesis.speak(utterance);
 }
 
@@ -460,21 +576,34 @@ function checkForChallenge() {
     if (shouldShowChallenge || randomTurnCheck) {
         const randomChallenge = enabledChallenges[Math.floor(Math.random() * enabledChallenges.length)];
         showChallenge(randomChallenge);
-        
-        // Play challenge sound
+
+        // Play challenge sound - ensure it's stopped and reset before playing
+        challengeSound.pause();
         challengeSound.currentTime = 0;
-        challengeSound.play().catch(e => console.log('Audio play failed:', e));
-        
+
+        // Use a promise to ensure audio plays properly
+        const playPromise = challengeSound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                console.log('Audio play failed:', e);
+                // Try again after a small delay
+                setTimeout(() => {
+                    challengeSound.currentTime = 0;
+                    challengeSound.play().catch(err => console.log('Retry failed:', err));
+                }, 100);
+            });
+        }
+
         // Add 10 seconds to timer (if in timer mode)
         if (turnMode === 'timer' && countdownInterval) {
             currentCountdown += 10;
             updateCountdownDisplay();
         }
-        
+
         // Voice announces challenge with player name
         const currentPlayer = players[currentPlayerIndex];
         speak(`Challenge for ${currentPlayer}! ${randomChallenge.text}`);
-        
+
         return true;
     }
     return false;
