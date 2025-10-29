@@ -134,33 +134,14 @@ function initSpotifySDK() {
 }
 
 // Spotify Authentication
-async function connectSpotify() {
-    try {
-        if (!window.crypto || !window.crypto.subtle) {
-            throw new Error('Secure crypto APIs are not available in this browser.');
-        }
+function connectSpotify() {
+    const authUrl = `https://accounts.spotify.com/authorize?` +
+        `client_id=${SPOTIFY_CONFIG.clientId}` +
+        `&response_type=token` +
+        `&redirect_uri=${encodeURIComponent(SPOTIFY_CONFIG.redirectUri)}` +
+        `&scope=${encodeURIComponent(SPOTIFY_CONFIG.scopes.join(' '))}`;
 
-        const codeVerifier = generateCodeVerifier();
-        const codeChallenge = await generateCodeChallenge(codeVerifier);
-        const state = generateStateParameter();
-
-        localStorage.setItem('spotifyCodeVerifier', codeVerifier);
-        localStorage.setItem('spotifyAuthState', state);
-
-        const authUrl = `https://accounts.spotify.com/authorize?` +
-            `client_id=${SPOTIFY_CONFIG.clientId}` +
-            `&response_type=code` +
-            `&redirect_uri=${encodeURIComponent(SPOTIFY_CONFIG.redirectUri)}` +
-            `&scope=${encodeURIComponent(SPOTIFY_CONFIG.scopes.join(' '))}` +
-            `&state=${encodeURIComponent(state)}` +
-            `&code_challenge_method=S256` +
-            `&code_challenge=${encodeURIComponent(codeChallenge)}`;
-
-        window.location.href = authUrl;
-    } catch (error) {
-        console.error('Error initiating Spotify authorization:', error);
-        alert('Unable to start Spotify authorization. Please try again.');
-    }
+    window.location.href = authUrl;
 }
 
 function disconnectSpotify() {
