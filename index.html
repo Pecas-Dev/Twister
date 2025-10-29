@@ -4,226 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Twister Game</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .header p {
-            font-size: 1em;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 30px 20px;
-        }
-
-        .section {
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            font-size: 1.3em;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .player-input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-add {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .btn-add:hover {
-            background: #45a049;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-        }
-
-        .btn-add:active {
-            transform: translateY(0);
-        }
-
-        .players-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .player-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .player-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .player-name {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .btn-remove {
-            background: #f44336;
-            color: white;
-            padding: 8px 16px;
-            font-size: 0.9em;
-        }
-
-        .btn-remove:hover {
-            background: #da190b;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #999;
-            font-style: italic;
-        }
-
-        .btn-start {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-size: 1.2em;
-            margin-top: 20px;
-        }
-
-        .btn-start:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-start:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .color-dots {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .color-dot {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .dot-red { background: #e74c3c; }
-        .dot-blue { background: #3498db; }
-        .dot-yellow { background: #f1c40f; }
-        .dot-green { background: #2ecc71; }
-
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 2em;
-            }
-
-            .content {
-                padding: 20px 15px;
-            }
-
-            .player-input-group {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎮 Twister</h1>
+            <h1>🌵🐡🍤</h1>
+            <h1>Twister</h1>
             <p>Get ready to twist and turn!</p>
-            <div class="color-dots">
-                <div class="color-dot dot-red"></div>
-                <div class="color-dot dot-blue"></div>
-                <div class="color-dot dot-yellow"></div>
-                <div class="color-dot dot-green"></div>
-            </div>
         </div>
 
-        <div class="content">
+        <!-- Setup Screen -->
+        <div class="content setup-screen">
             <div class="section">
                 <h2 class="section-title">Add Players</h2>
                 <div class="player-input-group">
@@ -239,92 +31,251 @@
                 </div>
             </div>
 
+            <button class="btn btn-secondary" onclick="openSettings()" style="width: 100%; margin-bottom: 12px;">
+                ⚙️ Settings
+            </button>
+
             <button class="btn btn-start" id="startBtn" onclick="startGame()" disabled>
                 Start Game
             </button>
         </div>
+
+        <!-- Game Screen -->
+        <div class="content game-screen">
+            <div class="game-header">
+                <div class="current-player">
+                    <span id="currentPlayerName">Player</span>'s Turn
+                </div>
+                <div class="turn-counter">
+                    Turn <span id="turnNumber">1</span>
+                </div>
+                <button class="settings-btn" onclick="openSettings()">⚙️</button>
+            </div>
+
+            <!-- Challenge Banner -->
+            <div id="challengeBanner" class="challenge-banner" style="display: none;">
+                <div class="challenge-label">⭐ Challenge ⭐</div>
+                <div class="challenge-text" id="challengeText"></div>
+            </div>
+
+            <!-- In-Game Timer Adjustment (only in timer mode) -->
+            <div class="ingame-timer-adjust" style="display: none;">
+                <button class="timer-btn timer-btn-minus" onclick="adjustTimer(-5)">
+                    <img src="images/Leftarrow.png" alt="Decrease">
+                </button>
+                <div class="timer-display">10s</div>
+                <button class="timer-btn timer-btn-plus" onclick="adjustTimer(5)">
+                    <img src="images/Rightarrow.png" alt="Increase">
+                </button>
+            </div>
+
+            <div class="result-display color-waiting">
+                <img id="limbIcon" class="limb-icon" src="images/arm.png" alt="Limb" style="display: none;">
+                <div class="result-limb" id="resultLimb"></div>
+                <div class="result-color-text" id="resultColorText">Ready?</div>
+            </div>
+
+            <!-- Timer Countdown Display (only shown in timer mode) -->
+            <div class="timer-countdown" style="display: none;">
+                <div class="countdown-text">Next turn in</div>
+                <div class="countdown-timer" id="countdownTimer">10</div>
+            </div>
+
+            <div class="game-controls">
+                <button class="btn btn-spin" onclick="nextPlayerManual()">
+                    Next Player
+                </button>
+                <button class="btn btn-secondary" onclick="endGame()">
+                    End Game
+                </button>
+            </div>
+        </div>
     </div>
 
-    <script>
-        let players = [];
-
-        // Load players from localStorage on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedPlayers = localStorage.getItem('twisterPlayers');
-            if (savedPlayers) {
-                players = JSON.parse(savedPlayers);
-                updatePlayersList();
-            }
-        });
-
-        // Allow Enter key to add player
-        document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                addPlayer();
-            }
-        });
-
-        function addPlayer() {
-            const input = document.getElementById('playerNameInput');
-            const name = input.value.trim();
-
-            if (name === '') {
-                alert('Please enter a player name!');
-                return;
-            }
-
-            if (players.includes(name)) {
-                alert('This player is already in the game!');
-                return;
-            }
-
-            players.push(name);
-            input.value = '';
-            input.focus();
-            
-            updatePlayersList();
-            savePlayers();
-        }
-
-        function removePlayer(index) {
-            players.splice(index, 1);
-            updatePlayersList();
-            savePlayers();
-        }
-
-        function updatePlayersList() {
-            const playersList = document.getElementById('playersList');
-            const playerCount = document.getElementById('playerCount');
-            const startBtn = document.getElementById('startBtn');
-
-            playerCount.textContent = players.length;
-
-            if (players.length === 0) {
-                playersList.innerHTML = '<div class="empty-state">No players yet. Add some players to start!</div>';
-                startBtn.disabled = true;
-            } else {
-                playersList.innerHTML = players.map((player, index) => `
-                    <div class="player-item">
-                        <span class="player-name">${player}</span>
-                        <button class="btn btn-remove" onclick="removePlayer(${index})">Remove</button>
+    <!-- Settings Panel Overlay -->
+    <div class="settings-overlay" onclick="closeSettings()"></div>
+    
+    <div class="settings-panel">
+        <div class="settings-header">
+            <div class="settings-header-content">
+                <h2 class="settings-title">Settings</h2>
+                <button class="close-settings-btn" onclick="closeSettings()">✕</button>
+            </div>
+        </div>
+        
+        <div class="settings-content">
+            <!-- Turn Mode in Settings -->
+            <div class="section turn-mode-section">
+                <h2 class="section-title">Turn Mode</h2>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="manual" onclick="setTurnMode('manual'); updateInGameTimerVisibility();">Manual</button>
+                    <button class="mode-btn" data-mode="timer" onclick="setTurnMode('timer'); updateInGameTimerVisibility();">
+                        Timer
+                    </button>
+                </div>
+                
+                <div class="timer-settings">
+                    <div class="timer-control">
+                        <button class="timer-btn timer-btn-minus" onclick="adjustTimer(-5)">
+                            <img src="images/Leftarrow.png" alt="Decrease">
+                        </button>
+                        <div class="timer-display">10s</div>
+                        <button class="timer-btn timer-btn-plus" onclick="adjustTimer(5)">
+                            <img src="images/Rightarrow.png" alt="Increase">
+                        </button>
                     </div>
-                `).join('');
-                startBtn.disabled = players.length < 2;
-            }
-        }
+                </div>
+            </div>
 
-        function savePlayers() {
-            localStorage.setItem('twisterPlayers', JSON.stringify(players));
-        }
+            <!-- Challenge Settings -->
+            <div class="section voice-section">
+                <h2 class="section-title">Challenges</h2>
+                <div class="voice-toggle-container">
+                    <span class="voice-label">Enable Challenges</span>
+                    <label class="switch">
+                        <input type="checkbox" id="challengeToggle" checked onchange="toggleChallenges()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="challenge-controls active">
+                    <div class="section-title" style="font-size: 0.95em; margin-top: 16px; margin-bottom: 8px;">Frequency</div>
+                    <div class="mode-toggle">
+                        <button class="frequency-btn mode-btn" data-frequency="rare" onclick="setChallengeFrequency('rare')">Rare</button>
+                        <button class="frequency-btn mode-btn active" data-frequency="medium" onclick="setChallengeFrequency('medium')">Medium</button>
+                        <button class="frequency-btn mode-btn" data-frequency="frequent" onclick="setChallengeFrequency('frequent')">Frequent</button>
+                    </div>
+                    <p style="font-size: 0.85em; color: #8e8e93; margin-top: 12px; padding: 0 4px; line-height: 1.4;">
+                        Challenges appear randomly during gameplay. Frequency affects how often they might appear, but there's always an element of surprise!
+                    </p>
+                </div>
+            </div>
 
-        function startGame() {
-            if (players.length < 2) {
-                alert('You need at least 2 players to start!');
-                return;
-            }
-            // This will be implemented in Step 2
-            alert('Game starting soon! (Step 2 coming up 🎮)');
-        }
-    </script>
+            <!-- Voice Settings in Settings Panel -->
+            <div class="section voice-section">
+                <h2 class="section-title">Voice Announcements</h2>
+                <div class="voice-toggle-container">
+                    <span class="voice-label">Enable Voice</span>
+                    <label class="switch">
+                        <input type="checkbox" id="voiceToggleSettings" checked onchange="toggleVoice()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="voice-controls active">
+                    <div class="voice-control-row">
+                        <span class="control-label">Speed</span>
+                        <div class="voice-slider-container">
+                            <input type="range" id="rateSliderSettings" class="voice-slider" 
+                                   min="0.5" max="2" step="0.1" value="1" 
+                                   oninput="updateVoiceRate(this.value)">
+                            <span class="slider-value" id="rateValueSettings">1.0x</span>
+                        </div>
+                    </div>
+                    
+                    <div class="voice-control-row">
+                        <span class="control-label">Volume</span>
+                        <div class="voice-slider-container">
+                            <input type="range" id="volumeSliderSettings" class="voice-slider" 
+                                   min="0" max="1" step="0.1" value="1" 
+                                   oninput="updateVoiceVolume(this.value)">
+                            <span class="slider-value" id="volumeValueSettings">100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="voice-control-row">
+                        <span class="control-label">Pitch</span>
+                        <div class="voice-slider-container">
+                            <input type="range" id="pitchSliderSettings" class="voice-slider" 
+                                   min="0.5" max="2" step="0.1" value="1" 
+                                   oninput="updateVoicePitch(this.value)">
+                            <span class="slider-value" id="pitchValueSettings">1.0</span>
+                        </div>
+                    </div>
+                    
+                    <button class="test-voice-btn" onclick="testVoice()">
+                        🔊 Test Voice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Music/Spotify Settings -->
+            <div class="section voice-section">
+                <h2 class="section-title">Music 🎵</h2>
+                
+                <!-- Not connected view -->
+                <div id="spotifyDisconnected">
+                    <button class="spotify-connect-btn" onclick="connectSpotify()">
+                        <span>🎵</span> Connect Spotify
+                    </button>
+                    <p style="font-size: 0.85em; color: #8e8e93; margin-top: 12px; padding: 0 4px; line-height: 1.4;">
+                        Connect your Spotify account to play music during your Twister game! <strong>Requires Spotify Premium.</strong>
+                    </p>
+                </div>
+
+                <!-- Connected view -->
+                <div id="spotifyConnected" style="display: none;">
+                    <!-- Selected Playlist -->
+                    <div id="selectedPlaylist">
+                        <div class="empty-state">No playlist selected</div>
+                    </div>
+
+                    <!-- Search Playlists -->
+                    <div class="playlist-search-container">
+                        <input 
+                            type="text" 
+                            id="playlistSearch" 
+                            class="playlist-search-input" 
+                            placeholder="Search for playlists..."
+                            oninput="if(this.value.length > 2) searchPlaylists(this.value)"
+                        >
+                        <div id="playlistResults" class="playlist-results"></div>
+                    </div>
+
+                    <!-- Playback Controls -->
+                    <div class="playback-controls">
+                        <button class="playback-btn" id="spotifyPlayBtn" onclick="playSpotify()">▶️</button>
+                        <button class="playback-btn" id="spotifyPauseBtn" onclick="pauseSpotify()" style="display: none;">⏸️</button>
+                        <button class="playback-btn" onclick="skipSpotify()">⏭️</button>
+                    </div>
+
+                    <!-- Volume Control -->
+                    <div class="volume-control">
+                        <div class="volume-label">Volume</div>
+                        <input 
+                            type="range" 
+                            class="volume-slider" 
+                            min="0" 
+                            max="100" 
+                            value="50" 
+                            oninput="setSpotifyVolume(this.value)"
+                        >
+                    </div>
+
+                    <button class="spotify-disconnect-btn" onclick="disconnectSpotify()">
+                        Disconnect Spotify
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mini Music Player (shown during game) -->
+    <div id="miniMusicPlayer" class="mini-music-player">
+        <div class="mini-player-info" id="nowPlayingInfo">
+            <div class="now-playing-track">Not playing</div>
+            <div class="now-playing-artist">Connect Spotify</div>
+        </div>
+        <div class="mini-player-controls">
+            <button class="mini-player-btn" onclick="playSpotify()">▶️</button>
+            <button class="mini-player-btn" onclick="pauseSpotify()">⏸️</button>
+            <button class="mini-player-btn" onclick="skipSpotify()">⏭️</button>
+        </div>
+    </div>
+
+    <script src="spotify.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
