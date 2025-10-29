@@ -239,12 +239,4 @@ Feel free to fork and improve! Some ideas:
 - **Icons & Sound Effects:** Custom assets
 - **Design:** iOS-inspired interface
 
-## License
-
-Free to use and modify for personal and educational purposes.
-
 ---
-
-🤖 Enhanced with [Claude Code](https://claude.com/claude-code)
-
-Made with ❤️ for game nights!
