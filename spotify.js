@@ -1,4 +1,9 @@
 // Spotify Configuration
+// Client ID is loaded from config.js to keep credentials out of source control
+if (typeof SPOTIFY_CLIENT_ID === 'undefined') {
+    console.error('SPOTIFY_CLIENT_ID is not defined. Please create config.js from config.template.js');
+}
+
 const DEFAULT_SPOTIFY_REDIRECT_URI = 'https://pecas-dev.github.io/Twister/';
 
 function getSpotifyRedirectUri() {
@@ -26,7 +31,7 @@ function getSpotifyRedirectUri() {
 }
 
 const SPOTIFY_CONFIG = {
-    clientId: 'a7c8939253df48e6857e0fca2493f43d',
+    clientId: typeof SPOTIFY_CLIENT_ID !== 'undefined' ? SPOTIFY_CLIENT_ID : 'YOUR_CLIENT_ID_HERE',
     redirectUri: getSpotifyRedirectUri(),
     scopes: [
         'streaming',
