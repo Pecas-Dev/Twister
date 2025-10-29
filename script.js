@@ -25,18 +25,18 @@ const MIN_TIMER = 5;
 const MAX_TIMER = 30;
 const TIMER_STEP = 5;
 
-// Challenge Types
+// Challenge Types with enable/disable state
 const CHALLENGES = [
-    { text: "Hold for 10 seconds!", icon: "⏱️" },
-    { text: "Eyes closed for next move!", icon: "👁️" },
-    { text: "Switch spots with another player!", icon: "🔄" },
-    { text: "Freeze! Everyone hold position for 5 seconds!", icon: "🧊" },
-    { text: "Double move - place two limbs!", icon: "✌️" },
-    { text: "Spin 360° before your next move!", icon: "🌀" },
-    { text: "Touch your nose while in position!", icon: "👃" },
-    { text: "Balance on one foot only!", icon: "🦩" },
-    { text: "Make this move in slow motion!", icon: "🐌" },
-    { text: "Wild card - choose any spot!", icon: "🎲" }
+    { id: 1, text: "Hold for 10 seconds!", icon: "⏱️", enabled: true },
+    { id: 2, text: "Eyes closed for next move!", icon: "👁️", enabled: true },
+    { id: 3, text: "Switch spots with another player!", icon: "🔄", enabled: true },
+    { id: 4, text: "Freeze! Everyone hold position for 5 seconds!", icon: "🧊", enabled: true },
+    { id: 5, text: "Double move - place two limbs!", icon: "✌️", enabled: true },
+    { id: 6, text: "Spin 360° before your next move!", icon: "🌀", enabled: true },
+    { id: 7, text: "Touch your nose while in position!", icon: "👃", enabled: true },
+    { id: 8, text: "Balance on one foot only!", icon: "🦩", enabled: true },
+    { id: 9, text: "Make this move in slow motion!", icon: "🐌", enabled: true },
+    { id: 10, text: "Wild card - choose any spot!", icon: "🎲", enabled: true }
 ];
 
 // Challenge frequency settings
@@ -46,6 +46,9 @@ const CHALLENGE_PROBABILITIES = {
     'frequent': { minTurns: 3, maxTurns: 7, probability: 0.7 }
 };
 
+// Challenge sound
+const challengeSound = new Audio('sfx/OIIA.mp3');
+
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
     loadPlayers();
@@ -53,6 +56,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadVoiceSettings();
     loadChallengeSettings();
     checkSpeechSupport();
+    renderChallengeList();
 });
 
 // Setup Event Listeners
@@ -218,12 +222,49 @@ function setChallengeFrequency(frequency) {
     saveChallengeSettings();
 }
 
+function toggleChallenge(challengeId) {
+    const challenge = CHALLENGES.find(c => c.id === challengeId);
+    if (challenge) {
+        challenge.enabled = !challenge.enabled;
+        saveChallengeSettings();
+        renderChallengeList();
+    }
+}
+
+function renderChallengeList() {
+    const container = document.getElementById('challengeListContainer');
+    if (!container) return;
+    
+    container.innerHTML = CHALLENGES.map(challenge => `
+        <div class="challenge-list-item">
+            <div class="challenge-list-info">
+                <span class="challenge-icon">${challenge.icon}</span>
+                <span class="challenge-text">${challenge.text}</span>
+            </div>
+            <label class="switch">
+                <input type="checkbox" ${challenge.enabled ? 'checked' : ''} onchange="toggleChallenge(${challenge.id})">
+                <span class="slider"></span>
+            </label>
+        </div>
+    `).join('');
+}
+
 function loadChallengeSettings() {
     const saved = localStorage.getItem('twisterChallengeSettings');
     if (saved) {
         const settings = JSON.parse(saved);
         challengesEnabled = settings.enabled ?? true;
         challengeFrequency = settings.frequency ?? 'medium';
+        
+        // Load individual challenge states
+        if (settings.challengeStates) {
+            settings.challengeStates.forEach(state => {
+                const challenge = CHALLENGES.find(c => c.id === state.id);
+                if (challenge) {
+                    challenge.enabled = state.enabled;
+                }
+            });
+        }
         
         // Update UI
         const toggle = document.getElementById('challengeToggle');
@@ -247,9 +288,23 @@ function loadChallengeSettings() {
 function saveChallengeSettings() {
     const settings = {
         enabled: challengesEnabled,
-        frequency: challengeFrequency
+        frequency: challengeFrequency,
+        challengeStates: CHALLENGES.map(c => ({ id: c.id, enabled: c.enabled }))
     };
     localStorage.setItem('twisterChallengeSettings', JSON.stringify(settings));
+}
+
+function toggleChallengeList() {
+    const list = document.getElementById('challengeListDropdown');
+    const arrow = document.querySelector('.dropdown-arrow');
+    
+    if (list.style.display === 'none' || !list.style.display) {
+        list.style.display = 'block';
+        if (arrow) arrow.textContent = '▼';
+    } else {
+        list.style.display = 'none';
+        if (arrow) arrow.textContent = '▶';
+    }
 }
 
 // Voice Management
@@ -385,6 +440,10 @@ function closeSettings() {
 function checkForChallenge() {
     if (!challengesEnabled) return false;
     
+    // Get only enabled challenges
+    const enabledChallenges = CHALLENGES.filter(c => c.enabled);
+    if (enabledChallenges.length === 0) return false;
+    
     const settings = CHALLENGE_PROBABILITIES[challengeFrequency];
     
     // Check if enough turns have passed
@@ -399,9 +458,23 @@ function checkForChallenge() {
                            Math.random() < 0.4;
     
     if (shouldShowChallenge || randomTurnCheck) {
-        const randomChallenge = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
+        const randomChallenge = enabledChallenges[Math.floor(Math.random() * enabledChallenges.length)];
         showChallenge(randomChallenge);
-        speak(`Challenge! ${randomChallenge.text}`);
+        
+        // Play challenge sound
+        challengeSound.currentTime = 0;
+        challengeSound.play().catch(e => console.log('Audio play failed:', e));
+        
+        // Add 10 seconds to timer (if in timer mode)
+        if (turnMode === 'timer' && countdownInterval) {
+            currentCountdown += 10;
+            updateCountdownDisplay();
+        }
+        
+        // Voice announces challenge with player name
+        const currentPlayer = players[currentPlayerIndex];
+        speak(`Challenge for ${currentPlayer}! ${randomChallenge.text}`);
+        
         return true;
     }
     return false;
@@ -492,10 +565,12 @@ function spinWheel() {
     document.getElementById('resultLimb').textContent = randomLimb;
     document.getElementById('resultColorText').textContent = randomColor.toUpperCase();
 
-    // Announce with voice
-    const currentPlayer = players[currentPlayerIndex];
-    const announcement = `${currentPlayer}, ${randomLimb} on ${randomColor}`;
-    speak(announcement);
+    // Announce with voice (only if no challenge, otherwise challenge already announced)
+    if (!currentChallenge) {
+        const currentPlayer = players[currentPlayerIndex];
+        const announcement = `${currentPlayer}, ${randomLimb} on ${randomColor}`;
+        speak(announcement);
+    }
 
     // Start timer if in timer mode
     if (turnMode === 'timer') {

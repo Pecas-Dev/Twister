@@ -198,64 +198,46 @@
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Music/Spotify Settings -->
+            <!-- Music/Spotify Settings -->
             <div class="section voice-section">
-                <h2 class="section-title">Music 🎵</h2>
+                <h2 class="section-title">Music</h2>
                 
                 <!-- Not connected view -->
                 <div id="spotifyDisconnected">
                     <button class="spotify-connect-btn" onclick="connectSpotify()">
-                        <span>🎵</span> Connect Spotify
+                        <img src="images/spotify.png" alt="Spotify" style="width: 20px; height: 20px;"> Connect Spotify
                     </button>
                     <p style="font-size: 0.85em; color: #8e8e93; margin-top: 12px; padding: 0 4px; line-height: 1.4;">
-                        Connect your Spotify account to play music during your Twister game! <strong>Requires Spotify Premium.</strong>
+                        Play music during your game. <strong>Requires Spotify Premium.</strong>
                     </p>
                 </div>
 
                 <!-- Connected view -->
                 <div id="spotifyConnected" style="display: none;">
                     <!-- Selected Playlist -->
-                    <div id="selectedPlaylist">
-                        <div class="empty-state">No playlist selected</div>
+                    <div class="voice-toggle-container">
+                        <div>
+                            <div class="voice-label" id="selectedPlaylistName">No playlist</div>
+                            <div style="font-size: 0.85em; color: #8e8e93; margin-top: 2px;" id="playlistStatus">Select a playlist to play</div>
+                        </div>
+                        <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9em;" onclick="document.getElementById('playlistSearch').focus(); document.getElementById('playlistSearchContainer').style.display = 'block';">Change</button>
                     </div>
 
-                    <!-- Search Playlists -->
-                    <div class="playlist-search-container">
+                    <!-- Search Playlists (hidden by default) -->
+                    <div id="playlistSearchContainer" style="display: none; margin-top: 12px;">
                         <input 
                             type="text" 
                             id="playlistSearch" 
                             class="playlist-search-input" 
-                            placeholder="Search for playlists..."
+                            placeholder="Search playlists..."
                             oninput="if(this.value.length > 2) searchPlaylists(this.value)"
                         >
                         <div id="playlistResults" class="playlist-results"></div>
                     </div>
 
-                    <!-- Playback Controls -->
-                    <div class="playback-controls">
-                        <button class="playback-btn" id="spotifyPlayBtn" onclick="playSpotify()">▶️</button>
-                        <button class="playback-btn" id="spotifyPauseBtn" onclick="pauseSpotify()" style="display: none;">⏸️</button>
-                        <button class="playback-btn" onclick="skipSpotify()">⏭️</button>
-                    </div>
-
-                    <!-- Volume Control -->
-                    <div class="volume-control">
-                        <div class="volume-label">Volume</div>
-                        <input 
-                            type="range" 
-                            class="volume-slider" 
-                            min="0" 
-                            max="100" 
-                            value="50" 
-                            oninput="setSpotifyVolume(this.value)"
-                        >
-                    </div>
-
                     <button class="spotify-disconnect-btn" onclick="disconnectSpotify()">
-                        Disconnect Spotify
+                        Disconnect
                     </button>
                 </div>
             </div>
@@ -264,14 +246,14 @@
 
     <!-- Mini Music Player (shown during game) -->
     <div id="miniMusicPlayer" class="mini-music-player">
-        <div class="mini-player-info" id="nowPlayingInfo">
-            <div class="now-playing-track">Not playing</div>
-            <div class="now-playing-artist">Connect Spotify</div>
+        <div class="mini-player-info">
+            <div class="now-playing-track" id="miniTrackName">No music playing</div>
+            <div class="now-playing-artist" id="miniArtistName">Connect Spotify in settings</div>
         </div>
         <div class="mini-player-controls">
-            <button class="mini-player-btn" onclick="playSpotify()">▶️</button>
-            <button class="mini-player-btn" onclick="pauseSpotify()">⏸️</button>
-            <button class="mini-player-btn" onclick="skipSpotify()">⏭️</button>
+            <button class="mini-player-btn" id="miniPlayBtn" onclick="playSpotify()" style="display: none;">▶️</button>
+            <button class="mini-player-btn" id="miniPauseBtn" onclick="pauseSpotify()" style="display: none;">⏸️</button>
+            <button class="mini-player-btn" onclick="skipSpotify()" style="display: none;" id="miniSkipBtn">⏭️</button>
         </div>
     </div>
 
