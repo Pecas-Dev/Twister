@@ -1,7 +1,33 @@
 // Spotify Configuration
+const DEFAULT_SPOTIFY_REDIRECT_URI = 'https://pecas-dev.github.io/Twister/';
+
+function getSpotifyRedirectUri() {
+    if (typeof window === 'undefined') {
+        return DEFAULT_SPOTIFY_REDIRECT_URI;
+    }
+
+    const { origin, pathname } = window.location;
+
+    if (!origin || origin === 'null' || origin.startsWith('file://')) {
+        return DEFAULT_SPOTIFY_REDIRECT_URI;
+    }
+
+    let normalizedPath = pathname || '/';
+
+    if (normalizedPath.endsWith('index.html')) {
+        normalizedPath = normalizedPath.slice(0, -'index.html'.length);
+    }
+
+    if (!normalizedPath.endsWith('/')) {
+        normalizedPath += '/';
+    }
+
+    return `${origin}${normalizedPath}`;
+}
+
 const SPOTIFY_CONFIG = {
     clientId: 'a7c8939253df48e6857e0fca2493f43d',
-    redirectUri: 'https://pecas-dev.github.io/Twister/',
+    redirectUri: getSpotifyRedirectUri(),
     scopes: [
         'streaming',
         'user-read-email',
@@ -73,7 +99,7 @@ function connectSpotify() {
         `&response_type=token` +
         `&redirect_uri=${encodeURIComponent(SPOTIFY_CONFIG.redirectUri)}` +
         `&scope=${encodeURIComponent(SPOTIFY_CONFIG.scopes.join(' '))}`;
-    
+
     window.location.href = authUrl;
 }
 
