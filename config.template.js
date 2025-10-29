@@ -13,4 +13,4 @@
 // Note: The redirect URI will be automatically detected based on your current URL,
 // but you still need to register it in your Spotify app settings.
 
-const SPOTIFY_CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID_HERE';
+const SPOTIFY_CLIENT_ID = 'a7c8939253df48e6857e0fca2493f43d';
