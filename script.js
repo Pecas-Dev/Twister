@@ -7,6 +7,7 @@ let timerDuration = 10; // in seconds
 let countdownInterval = null;
 let currentCountdown = 0;
 let currentChallenge = null;
+let challengeBonusTime = 0; // Track bonus time from challenges
 
 // Challenge Settings
 let challengesEnabled = true;
@@ -43,9 +44,9 @@ const CHALLENGES = [
 
 // Challenge frequency settings
 const CHALLENGE_PROBABILITIES = {
-    'rare': { minTurns: 8, maxTurns: 15, probability: 0.3 },
-    'medium': { minTurns: 5, maxTurns: 10, probability: 0.5 },
-    'frequent': { minTurns: 3, maxTurns: 7, probability: 0.7 }
+    'rare': { minTurns: 8, maxTurns: 20, probability: 0.15 },
+    'medium': { minTurns: 5, maxTurns: 15, probability: 0.25 },
+    'frequent': { minTurns: 3, maxTurns: 10, probability: 0.35 }
 };
 
 // Challenge sound
@@ -446,9 +447,16 @@ function testVoice() {
     speak("Left hand on red", true);
 }
 
-function speak(text, isTest = false) {
-    if (!voiceEnabled && !isTest) return;
-    if (!('speechSynthesis' in window)) return;
+function speak(text, isTest = false, callback = null) {
+    if (!voiceEnabled && !isTest) {
+        // If voice is disabled, still call the callback
+        if (callback) callback();
+        return;
+    }
+    if (!('speechSynthesis' in window)) {
+        if (callback) callback();
+        return;
+    }
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
@@ -475,13 +483,18 @@ function speak(text, isTest = false) {
         }
     }
 
-    // Resume music after speech ends
+    // Resume music and call callback after speech ends
     utterance.onend = () => {
         if (isIOS && wasMusicPlaying && typeof playSpotify === 'function') {
             // Small delay before resuming music
             setTimeout(() => {
                 playSpotify();
             }, 300);
+        }
+        
+        // Call the callback function if provided
+        if (callback) {
+            callback();
         }
     };
 
@@ -554,26 +567,22 @@ function closeSettings() {
 
 // Challenge System
 function checkForChallenge() {
-    if (!challengesEnabled) return false;
+    if (!challengesEnabled) return null;
     
     // Get only enabled challenges
     const enabledChallenges = CHALLENGES.filter(c => c.enabled);
-    if (enabledChallenges.length === 0) return false;
+    if (enabledChallenges.length === 0) return null;
     
     const settings = CHALLENGE_PROBABILITIES[challengeFrequency];
     
     // Check if enough turns have passed
-    if (turnNumber < settings.minTurns) return false;
+    if (turnNumber < settings.minTurns) return null;
     
     // Random chance based on frequency
-    const shouldShowChallenge = Math.random() < settings.probability;
+    const randomRoll = Math.random();
+    const shouldShowChallenge = randomRoll < settings.probability;
     
-    // Add some randomness to when it appears
-    const randomTurnCheck = turnNumber >= settings.minTurns && 
-                           turnNumber <= settings.maxTurns && 
-                           Math.random() < 0.4;
-    
-    if (shouldShowChallenge || randomTurnCheck) {
+    if (shouldShowChallenge) {
         const randomChallenge = enabledChallenges[Math.floor(Math.random() * enabledChallenges.length)];
         showChallenge(randomChallenge);
 
@@ -595,18 +604,15 @@ function checkForChallenge() {
         }
 
         // Add 10 seconds to timer (if in timer mode)
-        if (turnMode === 'timer' && countdownInterval) {
-            currentCountdown += 10;
-            updateCountdownDisplay();
+        if (turnMode === 'timer') {
+            // Set bonus time flag - startCountdown will use it
+            challengeBonusTime = 10;
         }
 
-        // Voice announces challenge with player name
-        const currentPlayer = players[currentPlayerIndex];
-        speak(`Challenge for ${currentPlayer}! ${randomChallenge.text}`);
-
-        return true;
+        // Return challenge so it can be announced in proper sequence
+        return randomChallenge;
     }
-    return false;
+    return null;
 }
 
 function showChallenge(challenge) {
@@ -636,6 +642,7 @@ function startGame() {
     // Reset game state
     currentPlayerIndex = 0;
     turnNumber = 1;
+    challengeBonusTime = 0; // Reset any bonus time
     hideChallenge();
 
     // Switch to game screen
@@ -671,7 +678,7 @@ function spinWheel() {
     hideChallenge();
     
     // Check for challenge
-    checkForChallenge();
+    const challenge = checkForChallenge();
     
     // Random selection
     const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -694,9 +701,19 @@ function spinWheel() {
     document.getElementById('resultLimb').textContent = randomLimb;
     document.getElementById('resultColorText').textContent = randomColor.toUpperCase();
 
-    // Announce with voice (only if no challenge, otherwise challenge already announced)
-    if (!currentChallenge) {
-        const currentPlayer = players[currentPlayerIndex];
+    // Voice announcement with proper sequencing
+    const currentPlayer = players[currentPlayerIndex];
+    
+    if (challenge) {
+        // If there's a challenge: announce challenge FIRST, then announce the turn
+        const challengeAnnouncement = `Challenge for ${currentPlayer}! ${challenge.text}`;
+        speak(challengeAnnouncement, false, () => {
+            // After challenge announcement finishes, announce the turn
+            const turnAnnouncement = `${currentPlayer}, ${randomLimb} on ${randomColor}`;
+            speak(turnAnnouncement);
+        });
+    } else {
+        // No challenge: just announce the turn normally
         const announcement = `${currentPlayer}, ${randomLimb} on ${randomColor}`;
         speak(announcement);
     }
@@ -713,7 +730,11 @@ function startCountdown() {
         clearInterval(countdownInterval);
     }
 
-    currentCountdown = timerDuration;
+    // Start with base timer duration plus any challenge bonus time
+    currentCountdown = timerDuration + challengeBonusTime;
+    
+    // Reset bonus time after using it
+    challengeBonusTime = 0;
     
     // Show countdown display
     const countdownDisplay = document.querySelector('.timer-countdown');
