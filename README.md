@@ -1,4 +1,4 @@
-# 🌵🐡🍤 Twister Game
+# 🌵🐡 Twister Game
 
 A modern, interactive Twister game web application with Spotify integration, voice announcements, and fun challenges!
 
